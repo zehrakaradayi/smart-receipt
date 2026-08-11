@@ -114,10 +114,28 @@ export default function Home() {
   async function handleSend() {
     if (drafts.length === 0) return;
     setBanner(null);
+
+    const analyzing = drafts.filter((d) => d.status === "analyzing");
+    if (analyzing.length > 0) {
+      setBanner({ type: "error", message: "Hâlâ analiz edilen fişler var, bitmesini bekle." });
+      return;
+    }
+
+    const sendable = drafts.filter((d) => d.merchant.trim() !== "" || d.total.trim() !== "");
+    const skipped = drafts.length - sendable.length;
+
+    if (sendable.length === 0) {
+      setBanner({
+        type: "error",
+        message: "Gönderilecek dolu bir fiş yok. Önce fişleri analiz et ya da bilgileri elle doldur.",
+      });
+      return;
+    }
+
     setIsSending(true);
 
     try {
-      const receipts: SheetReceiptPayload[] = drafts.map((d) => ({
+      const receipts: SheetReceiptPayload[] = sendable.map((d) => ({
         merchant: d.merchant,
         date: d.date,
         time: d.time,
@@ -142,8 +160,12 @@ export default function Home() {
       const data = await response.json();
       if (!data.success) throw new Error(data.error || "Google Sheets'e gönderilemedi.");
 
-      setBanner({ type: "success", message: `${receipts.length} fiş başarıyla Google Sheets'e gönderildi.` });
-      setDrafts([]);
+      const skippedNote = skipped > 0 ? ` (${skipped} boş fiş atlandı.)` : "";
+      setBanner({
+        type: "success",
+        message: `${receipts.length} fiş başarıyla Google Sheets'e gönderildi.${skippedNote}`,
+      });
+      setDrafts((prev) => prev.filter((d) => !sendable.some((s) => s.id === d.id)));
       setHistoryRefreshKey((k) => k + 1);
     } catch (err) {
       setBanner({

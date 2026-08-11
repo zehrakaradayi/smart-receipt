@@ -74,6 +74,9 @@ export default function ReceiptsTable({ drafts, onChange, onRemove }: ReceiptsTa
                 </td>
                 <td className="px-3 py-3">
                   <StatusBadge draft={draft} />
+                  {draft.status === "error" && draft.error && (
+                    <p className="mt-1 max-w-[10rem] text-[11px] leading-snug text-red-600">{draft.error}</p>
+                  )}
                 </td>
                 <td className="px-3 py-3">
                   <RemoveButton draftId={draft.id} onRemove={onRemove} />
@@ -97,6 +100,9 @@ export default function ReceiptsTable({ drafts, onChange, onRemove }: ReceiptsTa
                 <RemoveButton draftId={draft.id} onRemove={onRemove} />
               </div>
             </div>
+            {draft.status === "error" && draft.error && (
+              <p className="mt-1 text-xs text-red-600">{draft.error}</p>
+            )}
 
             <div className="mt-3 grid grid-cols-2 gap-2.5">
               {FIELD_LABELS.map((f) => (
