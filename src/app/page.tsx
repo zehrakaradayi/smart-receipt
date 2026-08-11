@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import UploadArea from "@/components/UploadArea";
 import ReceiptsTable from "@/components/ReceiptsTable";
 import HistorySection from "@/components/HistorySection";
@@ -14,6 +14,16 @@ export default function Home() {
   const [isSending, setIsSending] = useState(false);
   const [banner, setBanner] = useState<Banner>(null);
   const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
+
+  useEffect(() => {
+    const stopDefaultFileOpen = (event: DragEvent) => event.preventDefault();
+    window.addEventListener("dragover", stopDefaultFileOpen);
+    window.addEventListener("drop", stopDefaultFileOpen);
+    return () => {
+      window.removeEventListener("dragover", stopDefaultFileOpen);
+      window.removeEventListener("drop", stopDefaultFileOpen);
+    };
+  }, []);
 
   function addFiles(files: { id: string; fileName: string; imageBase64: string }[]) {
     setBanner(null);

@@ -306,6 +306,29 @@ function fixImageUrls() {
 }
 
 /**
+ * One-off maintenance function: removes sample/test rows (from testReceipt()
+ * and earlier manual API testing) so the sheet only holds real receipts.
+ */
+function cleanupTestData() {
+  const sheet = getOrCreateReceiptsSheet();
+  const testMerchants = ["Migros", "Starbucks", "Test Market"];
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+
+  const merchants = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  let removed = 0;
+
+  for (let i = merchants.length - 1; i >= 0; i--) {
+    if (testMerchants.indexOf(merchants[i][0]) !== -1) {
+      sheet.deleteRow(i + 2);
+      removed++;
+    }
+  }
+
+  Logger.log("Removed " + removed + " test row(s).");
+}
+
+/**
  * Wraps a JS object as a JSON ContentService response.
  */
 function jsonResponse(data) {

@@ -20,10 +20,19 @@ export default function UploadArea({ onFilesAdded, disabled }: UploadAreaProps) 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [dropWarning, setDropWarning] = useState<string | null>(null);
 
   async function handleFiles(fileList: FileList | null) {
-    if (!fileList || fileList.length === 0) return;
+    if (!fileList || fileList.length === 0) {
+      setDropWarning("Bu öğe bir dosya değil gibi görünüyor. Bir web sayfasından görsel sürüklüyorsan, önce bilgisayarına kaydedip öyle yükle.");
+      return;
+    }
     const files = Array.from(fileList).filter((f) => f.type.startsWith("image/"));
+    if (files.length === 0) {
+      setDropWarning("Yalnızca görsel dosyaları (JPG, PNG vb.) yükleyebilirsin.");
+      return;
+    }
+    setDropWarning(null);
     const entries = await Promise.all(
       files.map(async (file) => ({
         id: crypto.randomUUID(),
@@ -66,6 +75,10 @@ export default function UploadArea({ onFilesAdded, disabled }: UploadAreaProps) 
         </p>
         <p className="text-xs text-ink-muted">Aynı anda birden fazla fotoğraf seçebilirsin</p>
       </div>
+
+      {dropWarning && (
+        <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-800">{dropWarning}</p>
+      )}
 
       <div className="mt-3 flex flex-wrap gap-2">
         <button
