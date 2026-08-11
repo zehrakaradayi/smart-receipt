@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { CATEGORIES } from "@/lib/categories";
+import { CategoryIcon } from "@/lib/categoryIcons";
 import type { ReceiptDraft } from "@/lib/types";
 
 interface ReceiptsTableProps {
@@ -138,20 +139,28 @@ function CategorySelect({
   full?: boolean;
 }) {
   return (
-    <select
-      value={draft.category}
-      onChange={(e) => onChange(draft.id, "category", e.target.value)}
-      className={`rounded-md border border-hairline-strong bg-surface px-2 py-1.5 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft ${
-        full ? "w-full" : ""
-      }`}
-    >
-      <option value="">—</option>
-      {CATEGORIES.map((c) => (
-        <option key={c} value={c}>
-          {c}
-        </option>
-      ))}
-    </select>
+    <div className={`relative ${full ? "w-full" : ""}`}>
+      {draft.category && (
+        <CategoryIcon
+          category={draft.category}
+          className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-accent"
+        />
+      )}
+      <select
+        value={draft.category}
+        onChange={(e) => onChange(draft.id, "category", e.target.value)}
+        className={`rounded-md border border-hairline-strong bg-surface py-1.5 text-sm text-ink focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent-soft ${
+          draft.category ? "pl-7 pr-2" : "px-2"
+        } ${full ? "w-full" : ""}`}
+      >
+        <option value="">—</option>
+        {CATEGORIES.map((c) => (
+          <option key={c} value={c}>
+            {c}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 

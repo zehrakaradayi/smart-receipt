@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { CategoryIcon } from "@/lib/categoryIcons";
 import type { HistoryReceipt } from "@/lib/types";
 
 export default function HistorySection() {
@@ -66,7 +67,7 @@ export default function HistorySection() {
           {receipts.map((r, idx) => (
             <div
               key={idx}
-              className="flex gap-3 rounded-xl border border-hairline bg-surface p-3 shadow-sm transition-shadow hover:shadow-md"
+              className="flex gap-3 rounded-xl border border-hairline bg-surface p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
             >
               <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-hairline bg-surface-alt">
                 {r.imageUrl ? (
@@ -86,7 +87,8 @@ export default function HistorySection() {
                   {r.date} {r.time}
                 </p>
                 {r.category && (
-                  <span className="mt-1 inline-block rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent-hover">
+                  <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-accent-hover">
+                    <CategoryIcon category={r.category} className="h-3 w-3" />
                     {r.category}
                   </span>
                 )}

@@ -36,9 +36,83 @@ body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  background-image: radial-gradient(var(--color-hairline) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: -9px -9px;
 }
 
 ::selection {
   background: var(--color-accent-soft);
   color: var(--color-accent-hover);
+}
+
+/* Torn-receipt-edge: a jagged bottom border evoking a paper till-roll tear. */
+.torn-edge {
+  position: relative;
+  padding-bottom: 14px;
+}
+.torn-edge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 12px;
+  background-image: linear-gradient(135deg, var(--color-paper) 50%, transparent 50%),
+    linear-gradient(45deg, var(--color-paper) 50%, transparent 50%);
+  background-size: 16px 16px;
+  background-position: bottom left;
+  background-repeat: repeat-x;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise-in {
+  animation: rise-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes print-out {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-print-out {
+  animation: print-out 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes idle-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-idle-float {
+  animation: idle-float 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise-in,
+  .animate-print-out,
+  .animate-idle-float {
+    animation: none;
+  }
 }

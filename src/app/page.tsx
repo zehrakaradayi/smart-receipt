@@ -207,21 +207,30 @@ export default function Home() {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 px-4 py-10 sm:px-6 sm:py-14">
-      <header className="flex items-center gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground shadow-[0_2px_6px_rgba(196,68,26,0.35)]">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M6 2.5h12a.5.5 0 0 1 .5.5v18.13a.5.5 0 0 1-.74.44l-1.8-1a.5.5 0 0 0-.5 0l-1.71.96a.5.5 0 0 1-.5 0l-1.71-.96a.5.5 0 0 0-.48 0l-1.71.96a.5.5 0 0 1-.5 0l-1.71-.96a.5.5 0 0 0-.5 0l-1.8 1a.5.5 0 0 1-.74-.44V3a.5.5 0 0 1 .5-.5Z"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinejoin="round"
-            />
-            <path d="M8.25 8h7.5M8.25 11.25h7.5M8.25 14.5h4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-        </div>
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">Smart Receipt</h1>
-          <p className="text-sm text-ink-muted">Fişlerini tara, düzenle ve Google Sheets&apos;e gönder.</p>
+      <header className="torn-edge overflow-hidden rounded-t-2xl bg-gradient-to-br from-accent-soft via-surface to-surface px-5 pt-7 shadow-sm sm:px-8 sm:pt-9">
+        <div className="flex items-center gap-4 pb-2">
+          <div className="animate-print-out flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-[0_8px_20px_rgba(196,68,26,0.35)]">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M6 2.5h12a.5.5 0 0 1 .5.5v18.13a.5.5 0 0 1-.74.44l-1.8-1a.5.5 0 0 0-.5 0l-1.71.96a.5.5 0 0 1-.5 0l-1.71-.96a.5.5 0 0 0-.48 0l-1.71.96a.5.5 0 0 1-.5 0l-1.71-.96a.5.5 0 0 0-.5 0l-1.8 1a.5.5 0 0 1-.74-.44V3a.5.5 0 0 1 .5-.5Z"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+              <path d="M8.25 8h7.5M8.25 11.25h7.5M8.25 14.5h4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </div>
+          <div>
+            <h1
+              className="animate-rise-in text-2xl font-bold tracking-tight text-ink sm:text-3xl"
+              style={{ animationDelay: "80ms" }}
+            >
+              Smart Receipt
+            </h1>
+            <p className="animate-rise-in mt-1 text-sm text-ink-muted sm:text-base" style={{ animationDelay: "160ms" }}>
+              Fişi fotoğrafla, yapay zekâ okusun <span className="text-accent">→</span> sen sadece onayla.
+            </p>
+          </div>
         </div>
       </header>
 
@@ -248,13 +257,13 @@ export default function Home() {
         </div>
       )}
 
-      <section className="flex flex-col gap-4">
+      <section className="animate-rise-in flex flex-col gap-4" style={{ animationDelay: "220ms" }}>
         <h2 className="text-base font-semibold text-ink">Fiş Yükle</h2>
         <UploadArea onFilesAdded={addFiles} disabled={isAnalyzing || isSending} />
       </section>
 
       {drafts.length > 0 && (
-        <section className="flex flex-col gap-4">
+        <section className="animate-rise-in flex flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-base font-semibold text-ink">
               Sonuçlar <span className="text-ink-muted">({drafts.length})</span>
@@ -264,7 +273,7 @@ export default function Home() {
                 type="button"
                 onClick={handleAnalyze}
                 disabled={isAnalyzing || isSending}
-                className="rounded-lg border border-hairline-strong bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface-alt disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-hairline-strong bg-surface px-4 py-2 text-sm font-medium text-ink transition-all hover:-translate-y-0.5 hover:bg-surface-alt hover:shadow-sm disabled:pointer-events-none disabled:opacity-50"
               >
                 {isAnalyzing ? "Analiz ediliyor…" : "Analyze Receipts"}
               </button>
@@ -272,7 +281,7 @@ export default function Home() {
                 type="button"
                 onClick={handleSend}
                 disabled={isAnalyzing || isSending}
-                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground shadow-sm transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-accent-hover hover:shadow-md disabled:pointer-events-none disabled:opacity-50"
               >
                 {isSending ? "Gönderiliyor…" : "Send to Google Sheets"}
               </button>
@@ -283,12 +292,14 @@ export default function Home() {
 
           <div className="flex items-center justify-between rounded-xl bg-surface-alt px-4 py-3">
             <span className="text-sm font-medium text-ink-muted">Total Amount</span>
-            <span className="font-mono text-lg font-semibold text-ink">{totalAmount.toFixed(2)}</span>
+            <span className="font-mono text-lg font-semibold tabular-nums text-accent">{totalAmount.toFixed(2)}</span>
           </div>
         </section>
       )}
 
-      <HistorySection key={historyRefreshKey} />
+      <div className="animate-rise-in" style={{ animationDelay: "280ms" }}>
+        <HistorySection key={historyRefreshKey} />
+      </div>
     </div>
   );
 }

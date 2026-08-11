@@ -46,8 +46,10 @@ export default function UploadArea({ onFilesAdded, disabled }: UploadAreaProps) 
   return (
     <div>
       <div
-        className={`flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
-          isDragging ? "border-accent bg-accent-soft" : "border-hairline-strong bg-surface-alt"
+        className={`group flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 text-center transition-all duration-200 ${
+          isDragging
+            ? "scale-[1.01] border-accent bg-accent-soft shadow-[0_0_0_8px_rgba(196,68,26,0.06)]"
+            : "border-hairline-strong bg-surface-alt hover:border-accent/60 hover:bg-accent-soft/60"
         } ${disabled ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
         onClick={() => fileInputRef.current?.click()}
         onDragOver={(e) => {
@@ -62,7 +64,9 @@ export default function UploadArea({ onFilesAdded, disabled }: UploadAreaProps) 
         }}
       >
         <svg
-          className={`h-9 w-9 ${isDragging ? "text-accent" : "text-ink-faint"}`}
+          className={`h-9 w-9 transition-colors ${
+            isDragging ? "text-accent" : "animate-idle-float text-ink-faint group-hover:text-accent"
+          }`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -85,7 +89,7 @@ export default function UploadArea({ onFilesAdded, disabled }: UploadAreaProps) 
           type="button"
           disabled={disabled}
           onClick={() => fileInputRef.current?.click()}
-          className="rounded-lg border border-hairline-strong bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface-alt disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg border border-hairline-strong bg-surface px-4 py-2 text-sm font-medium text-ink transition-all hover:-translate-y-0.5 hover:bg-surface-alt hover:shadow-sm disabled:pointer-events-none disabled:opacity-50"
         >
           Upload Photos
         </button>
@@ -93,7 +97,7 @@ export default function UploadArea({ onFilesAdded, disabled }: UploadAreaProps) 
           type="button"
           disabled={disabled}
           onClick={() => cameraInputRef.current?.click()}
-          className="rounded-lg border border-hairline-strong bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface-alt disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-lg border border-hairline-strong bg-surface px-4 py-2 text-sm font-medium text-ink transition-all hover:-translate-y-0.5 hover:bg-surface-alt hover:shadow-sm disabled:pointer-events-none disabled:opacity-50"
         >
           Take Photo
         </button>
