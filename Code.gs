@@ -264,7 +264,7 @@ function setupDashboard() {
   sheet.autoResizeColumns(1, 7);
   SpreadsheetApp.flush();
 
-  const categoryRegion = sheet.getRange("E6").getDataRegion(SpreadsheetApp.Dimension.ROWS);
+  const categoryRegion = sheet.getRange("E6").getDataRegion();
   if (categoryRegion.getNumRows() > 1) {
     const chart = sheet
       .newChart()
