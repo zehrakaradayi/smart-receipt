@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import UploadArea from "@/components/UploadArea";
 import ReceiptsTable from "@/components/ReceiptsTable";
 import HistorySection from "@/components/HistorySection";
-import type { ReceiptDraft, SheetReceiptPayload } from "@/lib/types";
+import type { ExtractedReceipt, ReceiptDraft, SheetReceiptPayload } from "@/lib/types";
 
 type Banner = { type: "success" | "error"; message: string } | null;
 
@@ -78,29 +78,55 @@ export default function Home() {
       const data = await response.json();
       if (!data.success) throw new Error(data.error || "Analiz başarısız oldu.");
 
-      setDrafts((prev) =>
-        prev.map((d) => {
+      let splitCount = 0;
+
+      setDrafts((prev) => {
+        const next: ReceiptDraft[] = [];
+        for (const d of prev) {
           const result = data.results.find((r: { id: string }) => r.id === d.id);
-          if (!result) return d;
-          if (!result.success) {
-            return { ...d, status: "error", error: result.error };
+          if (!result) {
+            next.push(d);
+            continue;
           }
-          const r = result.data;
-          return {
-            ...d,
-            status: "analyzed",
-            merchant: r.merchant ?? "",
-            date: r.date ?? "",
-            time: r.time ?? "",
-            category: r.category ?? "",
-            total: r.total != null ? String(r.total) : "",
-            currency: r.currency ?? "",
-            tax: r.tax != null ? String(r.tax) : "",
-            bankName: r.bankName ?? "",
-            items: Array.isArray(r.items) ? r.items.join(", ") : "",
-          };
-        })
-      );
+          if (!result.success) {
+            next.push({ ...d, status: "error", error: result.error });
+            continue;
+          }
+
+          const receipts = Array.isArray(result.data) ? result.data : [result.data];
+          if (receipts.length === 0) {
+            next.push({ ...d, status: "error", error: "Fişte okunabilir bilgi bulunamadı." });
+            continue;
+          }
+          if (receipts.length > 1) splitCount += receipts.length;
+
+          receipts.forEach((r: ExtractedReceipt, index: number) => {
+            next.push({
+              ...d,
+              id: index === 0 ? d.id : crypto.randomUUID(),
+              fileName: receipts.length > 1 ? `${d.fileName} (${index + 1}/${receipts.length})` : d.fileName,
+              status: "analyzed",
+              merchant: r.merchant ?? "",
+              date: r.date ?? "",
+              time: r.time ?? "",
+              category: r.category ?? "",
+              total: r.total != null ? String(r.total) : "",
+              currency: r.currency ?? "",
+              tax: r.tax != null ? String(r.tax) : "",
+              bankName: r.bankName ?? "",
+              items: Array.isArray(r.items) ? r.items.join(", ") : "",
+            });
+          });
+        }
+        return next;
+      });
+
+      if (splitCount > 0) {
+        setBanner({
+          type: "success",
+          message: `Bir fotoğrafta birden fazla fiş bulundu, ${splitCount} ayrı fiş olarak eklendi.`,
+        });
+      }
     } catch (err) {
       setBanner({ type: "error", message: err instanceof Error ? err.message : "Analiz başarısız oldu." });
       setDrafts((prev) =>

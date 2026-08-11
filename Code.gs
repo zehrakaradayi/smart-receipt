@@ -329,6 +329,108 @@ function cleanupTestData() {
 }
 
 /**
+ * BONUS: computes this week's spending and emails a summary to the sheet
+ * owner via Gmail. Grouped by currency throughout so different currencies
+ * are never added together.
+ */
+function sendWeeklySummaryEmail() {
+  const sheet = getOrCreateReceiptsSheet();
+  const lastRow = sheet.getLastRow();
+  const recipient = Session.getEffectiveUser().getEmail();
+  const sheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  let weekRows = [];
+  if (lastRow >= 2) {
+    const values = sheet.getRange(2, 1, lastRow - 1, SHEET_HEADERS.length).getValues();
+    weekRows = values.filter(function (row) {
+      const date = row[1];
+      return date instanceof Date && date >= weekAgo && date <= now;
+    });
+  }
+
+  const totalsByCurrency = {};
+  const categoryTotals = {};
+  let highest = null;
+
+  weekRows.forEach(function (row) {
+    const merchant = row[0] || "(bilinmeyen)";
+    const category = row[3] || "Diğer";
+    const total = Number(row[4]) || 0;
+    const currency = row[5] || "?";
+
+    totalsByCurrency[currency] = (totalsByCurrency[currency] || 0) + total;
+
+    const catKey = category + " (" + currency + ")";
+    categoryTotals[catKey] = (categoryTotals[catKey] || 0) + total;
+
+    if (!highest || total > highest.total) {
+      highest = { merchant: merchant, total: total, currency: currency };
+    }
+  });
+
+  const totalsLines = Object.keys(totalsByCurrency)
+    .map(function (cur) {
+      return "  - " + totalsByCurrency[cur].toFixed(2) + " " + cur;
+    })
+    .join("\n") || "  - (bu hafta fiş yok)";
+
+  const categoryLines = Object.keys(categoryTotals)
+    .sort(function (a, b) {
+      return categoryTotals[b] - categoryTotals[a];
+    })
+    .map(function (key) {
+      return "  - " + key + ": " + categoryTotals[key].toFixed(2);
+    })
+    .join("\n") || "  - (bu hafta fiş yok)";
+
+  const highestLine = highest ? highest.merchant + " - " + highest.total.toFixed(2) + " " + highest.currency : "-";
+
+  const body = [
+    "Smart Receipt - Haftalık Harcama Özeti",
+    "",
+    "Haftalık toplam harcama:",
+    totalsLines,
+    "",
+    "Kategori bazlı toplamlar:",
+    categoryLines,
+    "",
+    "En yüksek harcama: " + highestLine,
+    "Bu hafta eklenen fiş sayısı: " + weekRows.length,
+    "",
+    "Google Sheet: " + sheetUrl,
+  ].join("\n");
+
+  MailApp.sendEmail({
+    to: recipient,
+    subject: "Smart Receipt - Haftalık Harcama Özeti",
+    body: body,
+  });
+
+  Logger.log("Weekly summary sent to " + recipient + " (" + weekRows.length + " receipts).");
+}
+
+/**
+ * BONUS setup: installs a weekly trigger (Mondays at 09:00, script timezone)
+ * that calls sendWeeklySummaryEmail(). Run this ONCE from the Apps Script
+ * editor (Run -> setupWeeklyEmailTrigger) - it needs an interactive
+ * authorization prompt for Gmail sending that a web app request cannot show.
+ */
+function setupWeeklyEmailTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (trigger) {
+    if (trigger.getHandlerFunction() === "sendWeeklySummaryEmail") {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+
+  ScriptApp.newTrigger("sendWeeklySummaryEmail").timeBased().onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(9).create();
+
+  Logger.log("Weekly email trigger installed (Mondays ~09:00).");
+}
+
+/**
  * Wraps a JS object as a JSON ContentService response.
  */
 function jsonResponse(data) {
