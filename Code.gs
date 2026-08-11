@@ -12,6 +12,7 @@
 
 const DRIVE_FOLDER_ID = "1k4zWNKttVNduC4cvUoPQNKiGEWEKmC10";
 const SHEET_NAME = "Receipts";
+const DASHBOARD_SHEET_NAME = "Dashboard";
 
 const SHEET_HEADERS = [
   "Merchant",
@@ -167,7 +168,7 @@ function saveReceiptImage(receipt) {
 
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
-  return "https://drive.google.com/uc?id=" + file.getId();
+  return "https://lh3.googleusercontent.com/d/" + file.getId();
 }
 
 /**
@@ -208,6 +209,100 @@ function getOrCreateReceiptsSheet() {
   }
 
   return sheet;
+}
+
+/**
+ * Creates (or rebuilds) the Dashboard sheet: a monthly total table grouped by
+ * currency, a category breakdown table filtered to one currency at a time
+ * (never sums different currencies together), and a pie chart built from that
+ * category breakdown. Safe to run again later to refresh the chart/layout.
+ */
+function setupDashboard() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = spreadsheet.getSheetByName(DASHBOARD_SHEET_NAME);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(DASHBOARD_SHEET_NAME);
+  }
+  sheet.getCharts().forEach(function (chart) {
+    sheet.removeChart(chart);
+  });
+  sheet.clear();
+
+  sheet.getRange("A1").setValue("Smart Receipt - Dashboard").setFontSize(16).setFontWeight("bold");
+
+  // Hidden helper columns: pre-clean Receipts data so QUERY never chokes on rows
+  // with a blank/text Date cell (Receipts.Date is not always a real Date value).
+  const helperRows = Math.max(getOrCreateReceiptsSheet().getLastRow(), 2);
+  sheet.getRange("J1:L1").setValues([["Month", "Currency", "Total"]]);
+  sheet
+    .getRange("J2")
+    .setFormula(
+      "=ARRAYFORMULA(IF(ISNUMBER(Receipts!B2:B" + helperRows + "); TEXT(Receipts!B2:B" + helperRows + "; \"YYYY-MM\"); \"\"))"
+    );
+  sheet.getRange("K2").setFormula("=ARRAYFORMULA(Receipts!F2:F" + helperRows + ")");
+  sheet.getRange("L2").setFormula("=ARRAYFORMULA(Receipts!E2:E" + helperRows + ")");
+  sheet.hideColumns(10, 3); // J:L
+
+  // Monthly total, grouped by currency so different currencies are never summed together.
+  sheet.getRange("A3").setValue("Monthly Total by Currency").setFontWeight("bold");
+  sheet
+    .getRange("A4")
+    .setFormula(
+      "=QUERY(J2:L" + helperRows + "; \"select J, K, sum(L) where J <> '' group by J, K order by J desc label J 'Month', K 'Currency', sum(L) 'Total'\"; 0)"
+    );
+
+  // Category breakdown, filtered to a single currency (see the note about not mixing currencies).
+  sheet.getRange("E3").setValue("Category Breakdown").setFontWeight("bold");
+  sheet.getRange("E4").setValue("Currency filter:");
+  sheet.getRange("F4").setValue("TRY").setFontWeight("bold").setBackground("#fbe7dc");
+  sheet
+    .getRange("E6")
+    .setFormula(
+      "=QUERY(Receipts!A2:K; \"select D, sum(E) where F = '\"&F4&\"' and D is not null group by D order by sum(E) desc label D 'Category', sum(E) 'Total'\"; 0)"
+    );
+
+  sheet.autoResizeColumns(1, 7);
+  SpreadsheetApp.flush();
+
+  const categoryRegion = sheet.getRange("E6").getDataRegion(SpreadsheetApp.Dimension.ROWS);
+  if (categoryRegion.getNumRows() > 1) {
+    const chart = sheet
+      .newChart()
+      .setChartType(Charts.ChartType.PIE)
+      .addRange(categoryRegion)
+      .setPosition(20, 1, 0, 0)
+      .setOption("title", "Category Breakdown")
+      .setOption("pieSliceText", "percentage")
+      .build();
+    sheet.insertChart(chart);
+  }
+
+  Logger.log("Dashboard set up.");
+}
+
+/**
+ * One-off maintenance function: rewrites any existing Receipt Image URL cells
+ * from the old "drive.google.com/uc?id=" format (blocked by Chrome's ORB when
+ * embedded as <img>) to the "lh3.googleusercontent.com/d/" format used going
+ * forward. Run manually once from the Apps Script editor if older rows exist.
+ */
+function fixImageUrls() {
+  const sheet = getOrCreateReceiptsSheet();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+
+  const urlColumn = SHEET_HEADERS.indexOf("Receipt Image URL") + 1;
+  const range = sheet.getRange(2, urlColumn, lastRow - 1, 1);
+  const values = range.getValues();
+
+  const fixed = values.map(function (row) {
+    const url = row[0];
+    const match = typeof url === "string" && url.match(/drive\.google\.com\/uc\?id=([^&]+)/);
+    return [match ? "https://lh3.googleusercontent.com/d/" + match[1] : url];
+  });
+
+  range.setValues(fixed);
+  Logger.log("Fixed " + fixed.filter(function (r, i) { return r[0] !== values[i][0]; }).length + " image URL(s).");
 }
 
 /**

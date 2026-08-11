@@ -148,54 +148,85 @@ export default function Home() {
   const totalAmount = drafts.reduce((sum, d) => sum + (Number(d.total) || 0), 0);
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6">
-      <header>
-        <h1 className="text-2xl font-bold text-gray-900">Smart Receipt</h1>
-        <p className="text-sm text-gray-500">Fişlerini tara, düzenle ve Google Sheets&apos;e gönder.</p>
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 px-4 py-10 sm:px-6 sm:py-14">
+      <header className="flex items-center gap-3">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground shadow-[0_2px_6px_rgba(196,68,26,0.35)]">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M6 2.5h12a.5.5 0 0 1 .5.5v18.13a.5.5 0 0 1-.74.44l-1.8-1a.5.5 0 0 0-.5 0l-1.71.96a.5.5 0 0 1-.5 0l-1.71-.96a.5.5 0 0 0-.48 0l-1.71.96a.5.5 0 0 1-.5 0l-1.71-.96a.5.5 0 0 0-.5 0l-1.8 1a.5.5 0 0 1-.74-.44V3a.5.5 0 0 1 .5-.5Z"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+            <path d="M8.25 8h7.5M8.25 11.25h7.5M8.25 14.5h4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </div>
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">Smart Receipt</h1>
+          <p className="text-sm text-ink-muted">Fişlerini tara, düzenle ve Google Sheets&apos;e gönder.</p>
+        </div>
       </header>
 
       {banner && (
         <div
-          className={`rounded-lg px-4 py-3 text-sm ${
-            banner.type === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+          role="status"
+          className={`flex items-start gap-3 rounded-xl px-4 py-3 text-sm font-medium ${
+            banner.type === "success" ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"
           }`}
         >
-          {banner.message}
+          {banner.type === "success" ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="mt-0.5 shrink-0" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
+              <path d="m8.5 12.5 2.4 2.4L15.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="mt-0.5 shrink-0" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M12 8v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <circle cx="12" cy="16" r="0.9" fill="currentColor" />
+            </svg>
+          )}
+          <span>{banner.message}</span>
         </div>
       )}
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold text-gray-900">Upload Receipts</h2>
+        <h2 className="text-base font-semibold text-ink">Fiş Yükle</h2>
         <UploadArea onFilesAdded={addFiles} disabled={isAnalyzing || isSending} />
       </section>
 
       {drafts.length > 0 && (
         <section className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-gray-900">Results ({drafts.length})</h2>
+            <h2 className="text-base font-semibold text-ink">
+              Sonuçlar <span className="text-ink-muted">({drafts.length})</span>
+            </h2>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={handleAnalyze}
                 disabled={isAnalyzing || isSending}
-                className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                className="rounded-lg border border-hairline-strong bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface-alt disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isAnalyzing ? "Analyzing…" : "Analyze Receipts"}
+                {isAnalyzing ? "Analiz ediliyor…" : "Analyze Receipts"}
               </button>
               <button
                 type="button"
                 onClick={handleSend}
                 disabled={isAnalyzing || isSending}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground shadow-sm transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isSending ? "Sending…" : "Send to Google Sheets"}
+                {isSending ? "Gönderiliyor…" : "Send to Google Sheets"}
               </button>
             </div>
           </div>
 
           <ReceiptsTable drafts={drafts} onChange={updateDraft} onRemove={removeDraft} />
 
-          <p className="text-sm text-gray-500">Total Amount: {totalAmount.toFixed(2)}</p>
+          <div className="flex items-center justify-between rounded-xl bg-surface-alt px-4 py-3">
+            <span className="text-sm font-medium text-ink-muted">Total Amount</span>
+            <span className="font-mono text-lg font-semibold text-ink">{totalAmount.toFixed(2)}</span>
+          </div>
         </section>
       )}
 
